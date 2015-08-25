@@ -1,0 +1,20 @@
+{
+  "name": "SimpleUserAPI",
+  "version": "1.0.0",
+  "description": "Get daily tiffin count and store them",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Mahesh",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^1.4.1",
+    "body-parser": "^1.13.3",
+    "express": "^4.13.3",
+    "jsonwebtoken": "^5.0.4",
+    "morgan": "^1.6.1",
+    "orchestrate": "^0.4.7",
+    "sendgrid": "^1.8.0"
+  }
+}
