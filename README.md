@@ -3,7 +3,7 @@ APIs in NodeJs for User registration and authentication.
 
 ## Requirements
 
-  + NodeJs -
+  + NodeJs
   + config.js - File with same structure as below
 
   ```javascript
@@ -20,6 +20,5 @@ APIs in NodeJs for User registration and authentication.
 
   Execute the following commands:
 
-    1 `npm install`
-    2 `node index.js`
-  
+    + 1 `npm install`
+    + 2 `node index.js`

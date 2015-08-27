@@ -8,7 +8,8 @@ var async = require('async');
 var crypto = require('crypto');
 var morgan = require('morgan');
 var jwt = require('jsonwebtoken');
-var emailService = require('./emailService.js'); 
+var emailService = require('./emailService.js');
+var uuid = require('node-uuid');
 var port = process.env.PORT || 8090;        // set our port
 var sha256;
 // ROUTES FOR OUR API
@@ -53,7 +54,7 @@ function shaConversion(passString){ console.log('PASSWORD : ',passString);
 		        	token: token,
 		        	name:user.username,
 		        	email:user.emailId,
-		        	id:resp.body.results[0].path.key});				
+		        	id:resp.body.results[0].path.key});
 			}
 			else{
 				res.status(400).json({ message: 'Authentication failed. Invalid Credentials.' });
@@ -62,9 +63,9 @@ function shaConversion(passString){ console.log('PASSWORD : ',passString);
 		.fail(function (err) {
 				res.status(500).json({ message: 'Database Error',actualError:err });
 		}):res.status(400).json({ message: 'Authentication failed. No emailId.' });
-	    
+
 	  });
-	
+
 	router.route('/userConfirmation/:activationKey').get(function(req,res){
 		if(req.params.activationKey){
 			db.search('users',req.params.activationKey)
@@ -118,7 +119,7 @@ function shaConversion(passString){ console.log('PASSWORD : ',passString);
     			db.search('users', req.body.email)
 				.then(function (res) {
 					if(res.body.count){
-					    done({ message: 'User Already Registered.' }); 				
+					    done({ message: 'User Already Registered.' });
 					}
 					else{
 						done(null);
@@ -139,7 +140,7 @@ function shaConversion(passString){ console.log('PASSWORD : ',passString);
 			.then(function (result) {
 				done(null, data);
 			})
-			.fail(function (err) {				
+			.fail(function (err) {
 				done({message:'Database Error',actualError:err}, 'error');
 			});
 		  },
@@ -157,7 +158,7 @@ function shaConversion(passString){ console.log('PASSWORD : ',passString);
 		 		res.status(500).json(err);
 		 	}
 		 	else{
-		 		res.json({ message: 'User Registered','result':result });	
+		 		res.json({ message: 'User Registered','result':result });
 		 	}
 		});
     });
@@ -212,7 +213,7 @@ router.post('/recoverPassword',function(req,res){
 				}
 				else{
 					done({message:'Email Sending Failed.',actualError:err})
-				}	
+				}
 			});
 		  }],function (err, result) {
 			console.log('final result : ');
@@ -220,7 +221,7 @@ router.post('/recoverPassword',function(req,res){
 		 		res.status(500).json(err);
 		 	}
 		 	else{
-		 		res.json({ message: 'Recovery Email Sent.' });	
+		 		res.json({ message: 'Recovery Email Sent.' });
 	});
 });
 
@@ -268,12 +269,12 @@ router.use(function(req, res, next) {
  if (token) {
 
     // verifies secret and checks exp
-    jwt.verify(token, app.get('superSecret'), function(err, decoded) {      
+    jwt.verify(token, app.get('superSecret'), function(err, decoded) {
       if (err) {
-        return res.status(401).json({ message: 'Failed to authenticate token.' });    
+        return res.status(401).json({ message: 'Failed to authenticate token.' });
       } else {
         // if everything is good, save to request for use in other routes
-        req.decoded = decoded;    
+        req.decoded = decoded;
         next();
       }
     });
@@ -283,13 +284,13 @@ router.use(function(req, res, next) {
     // if there is no token
     // return an error
     return res.status(403).send({message: 'No token provided.'});
-    
+
   }
 });
 
 // test route to make sure everything is working (accessed at GET http://localhost:8080/api)
 router.get('/', function(req, res) {
-    res.json({ message: 'hooray! welcome to our api!' });   
+    res.json({ message: 'hooray! welcome to our api!' });
 });
 
     router.get('/users', function(req, res) {
@@ -321,6 +322,52 @@ router.get('/', function(req, res) {
 		}
 	});
 
+	router.route('/userPosts').post(function(req,res){
+		if (req.body.postTitle && post.body.postContent) {
+			var postId = uuid.v1();
+			var post = {
+				'postTitle':req.body.postTitle,
+				'postContent':post.body.postContent,
+			};
+			db.post('posts',postId,post).then(function(resp){
+				db.newGraphBuilder()
+				.create()
+				.from('users', req.decoded.userKey)
+				.related('creates')
+				.to('posts', postId)
+				.then(function (resp) {
+				  res.json({message:'Post Created.'});
+				})
+				.fail(function(err) {
+					res.status(500).json({message:'Database Error.',actualError:err});
+				});
+			})
+			.fail(function(err) {
+				res.status(500).json({message:'Database Error.',actualError:err});
+			});
+		}
+		else {
+			res.status(400).json({message:'Bad Request.'});
+		}
+	})
+
+	.get(function(req,res) {
+		db.newGraphReader()
+		.get()
+		.from('users', req.decoded.userKey)
+		.related('creates')
+		.then(function (resp) {
+		  res.json(resp.body.results);
+		})
+		.fail(function(err) {
+			res.status(500).json({message:'Database Error.',actualError:err});
+		})
+	});
+
+
+	.put(function(req,res) {
+
+	});
 // START THE SERVER
 // =============================================================================
 app.listen(port);
