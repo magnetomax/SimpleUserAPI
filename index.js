@@ -27,7 +27,7 @@ app.use(morgan('dev'));
 app.use('/api', router);
 //convert to SHA
 function shaConversion(passString){ console.log('PASSWORD : ',passString);
-	return crypto.createHash('sha256').update(passString,'utf8').digest('base64');
+	return crypto.createHash('sha256').update(passString).digest('base64');
 }
 
 	// route to authenticate a user (POST http://localhost:8080/api/authenticate)
@@ -76,7 +76,7 @@ function shaConversion(passString){ console.log('PASSWORD : ',passString);
 				user.userRegistered = true;
 				user.userActivationKey = '';
 				user.userKey = path.key;
-				user.UserRef = path.ref;
+				user.userRef = path.ref;
 				//Database Update
 				db.put('users', path.key, user, path.ref)
 				.then(function(resp){
@@ -98,6 +98,7 @@ function shaConversion(passString){ console.log('PASSWORD : ',passString);
 	router.route('/registerUser')
     // create a bear (accessed at POST http://localhost:8080/api/bears)
     .post(function(req, res) {
+			console.log(req.body);
     	var data = {
 			'username': req.body.name,
 			'emailId': req.body.email,
@@ -202,8 +203,8 @@ router.post('/recoverPassword',function(req,res){
 			.fail(function(err){
 				done({message:'Database Update Error.',actualError:err});
 			});
-		  }
-		  ,function(done){
+		},
+		function(done){
 		  	emailService.setSubject('Password Reset');
 			emailService.setHtml('<h2>Hello '+user.username+',</h2><p>Please click on the link below to reset password.</p><a href='+req.protocol+'://'+req.get('host')+'/api/passwordReset/'+user.userPasswordRecoveyToken+'>ClickHere</a>');
 			emailService.setSender(user.emailId)
@@ -222,6 +223,7 @@ router.post('/recoverPassword',function(req,res){
 		 	}
 		 	else{
 		 		res.json({ message: 'Recovery Email Sent.' });
+			}
 	});
 });
 
@@ -309,7 +311,7 @@ router.get('/', function(req, res) {
 		if(req.body.emailId){
 			user.mobileNumber = req.body.mobileNumber;
 			user.imageUrl = req.body.imageUrl;
-			db.put('users', user.userKey, user, user.UserRef)
+			db.put('users', user.userKey, user, user.userRef)
 			.then(function(resp){
 				res.json({message:'User Profile Changed.'});
 			})
@@ -323,13 +325,13 @@ router.get('/', function(req, res) {
 	});
 
 	router.route('/userPosts').post(function(req,res){
-		if (req.body.postTitle && post.body.postContent) {
+		if (req.body.postTitle && req.body.postContent) {
 			var postId = uuid.v1();
 			var post = {
 				'postTitle':req.body.postTitle,
-				'postContent':post.body.postContent,
+				'postContent':req.body.postContent
 			};
-			db.post('posts',postId,post).then(function(resp){
+			db.put('posts',postId,post,false).then(function(resp){
 				db.newGraphBuilder()
 				.create()
 				.from('users', req.decoded.userKey)
@@ -339,11 +341,11 @@ router.get('/', function(req, res) {
 				  res.json({message:'Post Created.'});
 				})
 				.fail(function(err) {
-					res.status(500).json({message:'Database Error.',actualError:err});
+					res.status(500).json({message:'334Database Error.',actualError:err});
 				});
 			})
 			.fail(function(err) {
-				res.status(500).json({message:'Database Error.',actualError:err});
+				res.status(500).json({message:'348Database Error.',actualError:err});
 			});
 		}
 		else {
@@ -361,13 +363,13 @@ router.get('/', function(req, res) {
 		})
 		.fail(function(err) {
 			res.status(500).json({message:'Database Error.',actualError:err});
-		})
+		});
 	});
 
 
-	.put(function(req,res) {
-
-	});
+	// .put(function(req,res) {
+	//
+	// });
 // START THE SERVER
 // =============================================================================
 app.listen(port);
