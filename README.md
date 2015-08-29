@@ -20,5 +20,5 @@ APIs in NodeJs for User registration and authentication.
 
   Execute the following commands:
 
-    + 1 `npm install`
-    + 2 `node index.js`
+    + `npm install`
+    + `node index.js`
