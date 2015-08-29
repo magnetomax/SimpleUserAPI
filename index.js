@@ -98,7 +98,6 @@ function shaConversion(passString){ console.log('PASSWORD : ',passString);
 	router.route('/registerUser')
     // create a bear (accessed at POST http://localhost:8080/api/bears)
     .post(function(req, res) {
-			console.log(req.body);
     	var data = {
 			'username': req.body.name,
 			'emailId': req.body.email,
